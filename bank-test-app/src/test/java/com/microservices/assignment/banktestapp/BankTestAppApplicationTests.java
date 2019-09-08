@@ -31,7 +31,7 @@ public class BankTestAppApplicationTests {
 	private static String gatewayURL = "http://localhost:8765";
 	private static String username = "testuser";
 	private static String jwtToken = "";
-	private UUID accountNo = UUID.randomUUID();
+	private static UUID accountNo = UUID.randomUUID();
 
 	@Test
 	@Order(1)
@@ -172,9 +172,9 @@ public class BankTestAppApplicationTests {
 		JSONObject newAccountJSON = new JSONObject();
 		try {
 
-			newAccountJSON.put("id", "866876768768");
+			newAccountJSON.put("id", "");
 			accountNo = UUID.randomUUID();
-			newAccountJSON.put("accountNo", accountNo.toString());
+			newAccountJSON.put("accountNo", accountNo.toString().trim());
 			newAccountJSON.put("name", "Waseem");
 			newAccountJSON.put("lastName", "Ismail");
 			newAccountJSON.put("balance", 783778883.22);
@@ -207,7 +207,7 @@ public class BankTestAppApplicationTests {
 		JSONObject updateAccountJSON = new JSONObject();
 		try {
 
-			updateAccountJSON.put("accountNo", "13c5cf95-86d5-4d3d-b470-e47421872ef4");
+			updateAccountJSON.put("accountNo", accountNo.toString().trim());
 			updateAccountJSON.put("name", "Waseem");
 			updateAccountJSON.put("lastName", "Ismail");
 			updateAccountJSON.put("balance", 11111.22);
@@ -215,10 +215,12 @@ public class BankTestAppApplicationTests {
 			String addAccountsGatewayUrl = gatewayURL + "/bank-service/accounts";
 
 			HttpEntity<String> request = new HttpEntity<String>(updateAccountJSON.toString(), headers);
+			
+			Thread.sleep(1000);
 
 			ResponseEntity<String> updatedAccount = restTemplate.exchange(addAccountsGatewayUrl, HttpMethod.POST,
 					request, String.class);
-			updateAccountJSON = new JSONObject(updatedAccount.toString());
+			updateAccountJSON = new JSONObject(updatedAccount.getBody().toString());
 			assertEquals(updatedAccount.getStatusCode(), HttpStatus.OK);
 			assertEquals(11111.22, updateAccountJSON.getDouble("balance"));
 
@@ -227,6 +229,9 @@ public class BankTestAppApplicationTests {
 		} catch (HttpClientErrorException httpException) {
 
 			assertEquals(httpException.getStatusCode(), HttpStatus.UNAUTHORIZED);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 	}
@@ -234,6 +239,23 @@ public class BankTestAppApplicationTests {
 	@Test
 	@Order(8)
 	public void testGetAccountDetailsByAccountNo() {
+		
+		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.set("Authorization", jwtToken);
+
+		String listAccountsGatewayUrl = gatewayURL + "/bank-service/accounts/"+accountNo.toString().trim();
+
+		HttpEntity<String> request = new HttpEntity<String>(headers);
+
+		ResponseEntity<String> accountsList = restTemplate.exchange(listAccountsGatewayUrl, HttpMethod.GET, request,
+				String.class);
+
+		assertEquals(accountsList.getStatusCode(), HttpStatus.OK);
+
+		logger.info("Account Received: \n {}", accountsList.getBody());
+
 
 	}
 
